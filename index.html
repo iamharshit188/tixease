@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TixEase-Bot</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            background-image: url('https://images.pexels.com/photos/20967/pexels-photo.jpg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        
+        .chat-container {
+            backdrop-filter: blur(10px);
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .message {
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            margin-bottom: 0.5rem;
+            max-width: 80%;
+        }
+        
+        .user-msg {
+            background-color: #a29bfe;
+            color: white;
+            text-align: right;
+            margin-left: auto;
+        }
+        
+        .bot-msg {
+            background-color: #dfe6e9;
+            color: black;
+            text-align: left;
+        }
+        
+        .options-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .option-button {
+            padding: 8px 16px;
+            background: #a29bfe;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .option-button:hover {
+            background: #6c5ce7;
+        }
+        
+        .download-button {
+            display: block;
+            margin: 10px 0;
+            padding: 8px 16px;
+            background: #00b894;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        
+        .image-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .image-container img {
+            border-radius: 0.5rem;
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between text-gray-800">
+    <!-- Transparent Navigation Bar -->
+    <nav class="w-full py-4 fixed top-0 z-50 bg-opacity-30 bg-white shadow-sm backdrop-filter backdrop-blur-md">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <h1 class="text-xl font-semibold text-gray-800">TixEase-Bot</h1>
+            <ul class="flex space-x-4">
+                <li><a href="#chat-section" class="text-gray-700 hover:text-gray-900">Chat</a></li>
+                <li><a href="#credits-section" class="text-gray-700 hover:text-gray-900">Credits</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Chat Wrapper Section -->
+    <section class="flex-grow pt-16" id="chat-section">
+        <div class="flex items-center justify-center min-h-screen">
+            <div class="w-full max-w-md px-4">
+                <!-- Overlay with start button -->
+                <div id="chatOverlay" class="chat-overlay absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                    <div class="overlay-content text-center text-white">
+                        <p class="text-xl mb-4">Welcome to TixEase-Bot!</p>
+                        <button id="startChat" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition">Start Chat</button>
+                    </div>
+                </div>
+
+                <!-- Chat Container -->
+                <div id="mainChatContainer" class="chat-container hidden p-6 rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-semibold mb-4">Get your Tickets by chatting with this Advanced Bot</h2>
+                    <div id="chatbox" class="h-64 overflow-y-auto p-4 border border-gray-200 rounded mb-4 bg-white">
+                        <!-- Messages will appear here -->
+                    </div>
+                    <div class="flex items-center">
+                        <input type="text" id="userInput" class="flex-grow p-2 border border-gray-300 rounded mr-2" placeholder="Type your message here...">
+                        <button id="sendButton" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition">Send</button>
+                    </div>
+                </div>
+
+                <!-- Image Container -->
+                <div class="image-container">
+                    <img src="https://source.unsplash.com/featured/?art,museum" alt="Museum Art" class="rounded-lg shadow-lg">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Credits Section -->
+    <footer class="bg-gray-900 text-white py-8" id="credits-section">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-lg mb-2">Made with ❤️ by Your Team</p>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize jsPDF
+        window.jsPDF = window.jspdf.jsPDF;
+
+        // Museum data
+        const cities = {
+            "Mumbai": ["Chhatrapati Shivaji Museum", "Dr. Bhau Daji Lad Museum", "RBI Monetary Museum", "Mani Bhavan", "Nehru Science Centre"],
+            "Delhi": ["National Museum", "National Gallery of Modern Art", "Indian War Memorial Museum", "National Rail Museum", "Crafts Museum"],
+            "Bangalore": ["Government Museum", "HAL Aerospace Museum", "Karnataka Folk Museum", "Visvesvaraya Industrial Museum", "Brain Museum"],
+            "Kolkata": ["Indian Museum", "Victoria Memorial", "Science City", "Birla Industrial & Technological Museum", "Mother's Wax Museum"],
+            "Chennai": ["Government Museum", "Fort Museum", "Railway Museum", "Maritime Heritage Museum", "Children's Museum"]
+        };
+
+        let chatState = {
+            step: 'start',
+            selectedCity: '',
+            selectedMuseum: '',
+            userDetails: {},
+        };
+
+        $(document).ready(function() {
+            $('#startChat').click(function() {
+                $('#chatOverlay').fadeOut(500, function() {
+                    $('#mainChatContainer').fadeIn(500, function() {
+                        typeMessage("Hello! Welcome to TixEase Bot. Please select your city:");
+                        showCityOptions();
+                    });
+                });
+            });
+
+            $('#sendButton').click(handleUserInput);
+            $('#userInput').keypress(function(e) {
+                if (e.which == 13) {
+                    handleUserInput();
+                }
+            });
+        });
+
+        function typeMessage(message) {
+            let index = 0;
+            let typingMessage = '';
+            const interval = setInterval(function() {
+                typingMessage += message.charAt(index);
+                if (index === 0) {
+                    $('#chatbox').append('<div class="message bot-msg"></div>');
+                }
+                $('#chatbox').find('.bot-msg:last').html(typingMessage);
+                $('#chatbox').scrollTop($('#chatbox')[0].scrollHeight);
+                index++;
+                if (index >= message.length) {
+                    clearInterval(interval);
+                    if (message === "Hello! Welcome to TixEase Bot. Please select your city:") {
+                        showCityOptions();
+                    }
+                }
+            }, 50);
+        }
+
+        function showCityOptions() {
+            const optionsContainer = $('<div class="options-container"></div>');
+            Object.keys(cities).forEach(city => {
+                const button = $(`<button class="option-button">${city}</button>`);
+                button.click(() => handleCitySelection(city));
+                optionsContainer.append(button);
+            });
+            $('#chatbox').append(optionsContainer);
+            $('#chatbox').scrollTop($('#chatbox')[0].scrollHeight);
+        }
+
+        function handleCitySelection(city) {
+            chatState.selectedCity = city;
+            chatState.step = 'museum';
+            $('#chatbox').append(`<div class="message user-msg">${city}</div>`);
+            typeMessage(`Great choice! Here are the museums in ${city}:`);
+            setTimeout(() => showMuseumOptions(city), 1000);
+        }
+
+        function showMuseumOptions(city) {
+            const optionsContainer = $('<div class="options-container"></div>');
+            cities[city].forEach(museum => {
+                const button = $(`<button class="option-button">${museum}</button>`);
+                button.click(() => handleMuseumSelection(museum));
+                optionsContainer.append(button);
+            });
+            $('#chatbox').append(optionsContainer);
+            $('#chatbox').scrollTop($('#chatbox')[0].scrollHeight);
+        }
+
+        function handleMuseumSelection(museum) {
+            chatState.selectedMuseum = museum;
+            chatState.step = 'name';
+            $('#chatbox').append(`<div class="message user-msg">${museum}</div>`);
+            typeMessage("Please enter your name:");
+        }
+
+        function handleUserInput() {
+            const input = $('#userInput').val().trim();
+            if (!input) return;
+
+            $('#chatbox').append(`<div class="message user-msg">${input}</div>`);
+            $('#userInput').val('');
+
+            switch(chatState.step) {
+                case 'name':
+                    chatState.userDetails.name = input;
+                    chatState.step = 'phone';
+                    typeMessage("Please enter your phone number:");
+                    break;
+                case 'phone':
+                    if (validatePhone(input)) {
+                        chatState.userDetails.phone = input;
+                        chatState.step = 'email';
+                        typeMessage("Please enter your email address:");
+                    } else {
+                        typeMessage("Please enter a valid 10-digit phone number:");
+                    }
+                    break;
+                case 'email':
+                    if (validateEmail(input)) {
+                        chatState.userDetails.email = input;
+                        generateTicket();
+                    } else {
+                        typeMessage("Please enter a valid email address:");
+                    }
+                    break;
+            }
+        }
+
+        function validatePhone(phone) {
+            return /^\d{10}$/.test(phone);
+        }
+
+        function validateEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+
+        function generateTicket() {
+            const ticketNumber = Math.random().toString(36).substr(2, 9).toUpperCase();
+            const currentDate = new Date().toLocaleString();
+            
+        
+            const doc = new jsPDF();
+            
+            // Add logo (you'll need to replace with actual logo path)
+             doc.addImage('./waterplane.png', 'PNG', 10, 10, 50, 20);
+            
+            // Header
+            doc.setFontSize(24);
+            doc.setTextColor(65, 105, 225); // Royal Blue
+            doc.text("TixEase Bot Receipt", 105, 20, { align: "center" });
+            
+            // Date and Ticket Number
+            doc.setFontSize(10);
+            doc.setTextColor(100, 100, 100); // Gray
+            doc.text(`Date: ${currentDate}`, 20, 35);
+            doc.text(`Ticket #: ${ticketNumber}`, 20, 40);
+            
+            // Divider
+            doc.setDrawColor(200, 200, 200);
+            doc.line(20, 45, 190, 45);
+            
+            // Customer Details
+            doc.setFontSize(14);
+            doc.setTextColor(0, 0, 0);
+            doc.text("Customer Details", 20, 55);
+            
+            doc.setFontSize(11);
+            doc.text(`Name: ${chatState.userDetails.name}`, 25, 65);
+            doc.text(`Phone: ${chatState.userDetails.phone}`, 25, 72);
+            doc.text(`Email: ${chatState.userDetails.email}`, 25, 79);
+            
+            // Booking Details
+            doc.setFontSize(14);
+            doc.text("Booking Details", 20, 92);
+            
+            doc.setFontSize(11);
+            doc.text(`City: ${chatState.selectedCity}`, 25, 102);
+            doc.text(`Museum: ${chatState.selectedMuseum}`, 25, 109);
+            
+            // Price Section (example)
+            doc.line(20, 120, 190, 120);
+            doc.text("Amount Paid:", 140, 130);
+            doc.text("₹500.00", 175, 130);
+            doc.line(20, 135, 190, 135);
+            
+            // QR Code placeholder
+            doc.rect(20, 145, 30, 30);
+            doc.setFontSize(8);
+            doc.text("Scan QR for verification", 20, 180);
+            
+            // Terms and Conditions
+            doc.setFontSize(8);
+            doc.setTextColor(100, 100, 100);
+            doc.text("Terms & Conditions:", 20, 195);
+            doc.text("1. Please present this ticket at the museum entrance", 25, 200);
+            doc.text("2. This ticket is valid only for the date of purchase", 25, 205);
+            doc.text("3. No refunds or exchanges permitted", 25, 210);
+            
+            // Credits Section
+            doc.setFontSize(10);
+            doc.setTextColor(65, 105, 225);
+            doc.text("Developed by FSociety team:", 105, 225, { align: "center" });
+            doc.setFontSize(8);
+            doc.text([
+                "Harshit Tiwari (iamharshit188)",
+                "Deekshaa Singh (dugdug13)",
+                "Aamin Singh (AaminSingh)",
+                "Vansh Dixit (BatteryOrVansh)",
+                "Ishan Thapa (Ishan0011)",
+                "Shakshi Singh (Shakshisingh09)"
+            ], 105, 232, { align: "center" });
+            
+            // Footer
+            doc.setFontSize(8);
+            doc.setTextColor(100, 100, 100);
+            doc.text("Thank you for using TixEase Bot!", 105, 285, { align: "center" });
+            
+            typeMessage("Your ticket has been generated! Click the button below to download:");
+            const downloadButton = $('<button class="download-button">Download Ticket</button>');
+            downloadButton.click(() => doc.save(`museum-ticket-${ticketNumber}.pdf`));
+            $('#chatbox').append(downloadButton);
+            
+            typeMessage("Thank you for your booking! A confirmation email will be sent to your email address.");
+        }
+    </script>
+</body>
+</html>

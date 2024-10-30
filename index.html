@@ -111,7 +111,7 @@
 
                 <!-- Chat Container -->
                 <div id="mainChatContainer" class="chat-container hidden p-6 rounded-lg shadow-lg">
-                    <h2 class="text-2xl font-semibold mb-4">Get your Tickets by chatting with this Advanced Bot</h2>
+                    <h2 class="text-2xl font-semibold mb-4">Get your Tickts by chatting with this Adanced Bot</h2>
                     <div id="chatbox" class="h-64 overflow-y-auto p-4 border border-gray-200 rounded mb-4 bg-white">
                         <!-- Messages will appear here -->
                     </div>
@@ -132,7 +132,7 @@
     <!-- Credits Section -->
     <footer class="bg-gray-900 text-white py-8" id="credits-section">
         <div class="container mx-auto px-4 text-center">
-            <p class="text-lg mb-2">Made with ❤️ by Your Team</p>
+            <p class="text-lg mb-2">Made with ❤️ by FsOciety</p>
         </div>
     </footer>
 
@@ -278,8 +278,7 @@
             
         
             const doc = new jsPDF();
-            
-            // Add logo (you'll need to replace with actual logo path)
+            // logo 
              doc.addImage('./waterplane.png', 'PNG', 10, 10, 50, 20);
             
             // Header
@@ -315,7 +314,7 @@
             doc.text(`City: ${chatState.selectedCity}`, 25, 102);
             doc.text(`Museum: ${chatState.selectedMuseum}`, 25, 109);
             
-            // Price Section (example)
+            // Price Section 
             doc.line(20, 120, 190, 120);
             doc.text("Amount Paid:", 140, 130);
             doc.text("₹500.00", 175, 130);
@@ -326,7 +325,7 @@
             doc.setFontSize(8);
             doc.text("Scan QR for verification", 20, 180);
             
-            // Terms and Conditions
+        
             doc.setFontSize(8);
             doc.setTextColor(100, 100, 100);
             doc.text("Terms & Conditions:", 20, 195);
@@ -334,7 +333,7 @@
             doc.text("2. This ticket is valid only for the date of purchase", 25, 205);
             doc.text("3. No refunds or exchanges permitted", 25, 210);
             
-            // Credits Section
+            // Her we have our credits 
             doc.setFontSize(10);
             doc.setTextColor(65, 105, 225);
             doc.text("Developed by FSociety team:", 105, 225, { align: "center" });
@@ -348,7 +347,7 @@
                 "Shakshi Singh (Shakshisingh09)"
             ], 105, 232, { align: "center" });
             
-            // Footer
+    // Foter 
             doc.setFontSize(8);
             doc.setTextColor(100, 100, 100);
             doc.text("Thank you for using TixEase Bot!", 105, 285, { align: "center" });
@@ -358,7 +357,7 @@
             downloadButton.click(() => doc.save(`museum-ticket-${ticketNumber}.pdf`));
             $('#chatbox').append(downloadButton);
             
-            typeMessage("Thank you for your booking! A confirmation email will be sent to your email address.");
+            typeMessage("Thak you for your boking! A confirmation email will be sent to you email address.");
         }
     </script>
 </body>
